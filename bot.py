@@ -25,14 +25,15 @@ async def handle_start(message: Message):
 
     await message.answer(f"Assalomu alaykum, {user_display}!")
 
-# Render uchun HTTP web server (Health check va doimiy tirik turish uchun)
+# Render va Cron-job uchun tekshiruv (200 OK qaytaradi)
 async def handle_ping(request):
-    return web.Response(text="Bot muvaffaqiyatli ishlab turibdi!", content_type="text/plain; charset=utf-8")
+    return web.Response(text="Bot muvaffaqiyatli ishlab turibdi!")
 
 async def start_web_server():
     app = web.Application()
-    app.router.add_get('/', handle_ping)
-    app.router.add_get('/health', handle_ping)
+    # Har qanday so'rovga (GET, HEAD) javob berish uchun
+    app.router.add_route('*', '/', handle_ping)
+    app.router.add_route('*', '/health', handle_ping)
 
     port = int(os.environ.get("PORT", 8080))
     runner = web.AppRunner(app)
@@ -45,7 +46,7 @@ async def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
     logging.info("Dastur ishga tushmoqda...")
 
-    # 1. Render talab qiladigan web serverni fonda ishga tushiramiz
+    # 1. Web serverni fonda ishga tushiramiz
     await start_web_server()
 
     # 2. Telegram botni ishga tushirish
@@ -54,8 +55,7 @@ async def main():
         logging.info("Telegram Bot polling rejimida ishga tushdi...")
         await dp.start_polling(bot)
     else:
-        logging.error("DIQQAT: BOT_TOKEN muhit o'zgaruvchisi topilmadi! Iltimos, Render'da BOT_TOKEN ni kiriting.")
-        # Web server ishlab turishi uchun cheksiz kutish
+        logging.error("DIQQAT: BOT_TOKEN muhit o'zgaruvchisi topilmadi!")
         while True:
             await asyncio.sleep(3600)
 
